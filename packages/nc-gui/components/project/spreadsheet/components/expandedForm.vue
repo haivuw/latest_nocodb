@@ -389,6 +389,8 @@ export default {
         comments: this.commentsOnly
       }])
       this.logs = data.list
+      console.log("logs")
+      console.log(this.logs)
       this.loadingLogs = false
     },
     async save() {

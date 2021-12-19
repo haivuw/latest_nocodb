@@ -139,6 +139,10 @@ const uiTypes = [
   {
     name: 'SpecificDBType',
     icon: 'mdi-database-settings'
+  },
+  {
+    name: 'History',
+    icon: 'mdi-clock'
   }
   // {
   //   name: 'Barcode',
@@ -193,7 +197,8 @@ export default [
   'AutoNumber',
   'Barcode',
   'Button',
-  'SpecificDBType'
+  'SpecificDBType',
+  'History'
 ]
 
 export const UITypes = {
@@ -229,7 +234,8 @@ export const UITypes = {
   Barcode: 'Barcode',
   Button: 'Button',
   SpecificDBType: 'SpecificDBType',
-  LinkToAnotherRecord: 'LinkToAnotherRecord'
+  LinkToAnotherRecord: 'LinkToAnotherRecord',
+  History: 'History'
 }
 
 /**
