@@ -308,20 +308,7 @@
           </template>
         </div>
 
-        <div
-          v-if="time - $store.state.windows.miniSponsorCard > 15 * 60 * 1000"
-          class="pa-2 sponsor-wrapper"
-        >
-          <v-icon
-            small
-            class="close-icon"
-            @click="hideMiniSponsorCard"
-          >
-            mdi-close-circle-outline
-          </v-icon>
-
-          <extras />
-        </div>
+        
         <!--<div class="text-center">
           <v-hover >
             <template v-slot:default="{hover}">

@@ -219,7 +219,7 @@
                     </x-btn>
                   </div>
 
-                  <feedback-form class="mx-auto mt-6" />
+                  
                 </v-col>
               </v-row>
             </v-card>

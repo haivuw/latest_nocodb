@@ -127,14 +127,83 @@ export default {
 
       reader.readAsText(file)
     },
-
-   
-    async downloadPdf(){
-
-      const doc = new jsPDF()
+   async extractCsvData() {
+      return Promise.all(this.data.map(async(r) => {
+        const row = {}
+        for (const col of this.availableColumns) {
+          if (col.virtual) {
+            let prop, cn
+            if (col.mm || (col.lk && col.lk.type === 'mm')) {
+              const tn = col.mm ? col.mm.rtn : col.lk.ltn
+              const _tn = col.mm ? col.mm._rtn : col.lk._ltn
+              await this.$store.dispatch('meta/ActLoadMeta', {
+                env: this.nodes.env,
+                dbAlias: this.nodes.dbAlias,
+                tn
+              })
+              prop = `${_tn}MMList`
+              cn = col.lk
+                ? col.lk._lcn
+                : (this.$store.state.meta.metas[tn].columns.find(c => c.pv) || this.$store.state.meta.metas[tn].columns.find(c => c.pk) || {})._cn
+              row[col._cn] = r.row[prop] && r.row[prop].map(r => cn && r[cn])
+            } else if (col.hm || (col.lk && col.lk.type === 'hm')) {
+              const tn = col.hm ? col.hm.tn : col.lk.ltn
+              const _tn = col.hm ? col.hm._tn : col.lk._ltn
+              await this.$store.dispatch('meta/ActLoadMeta', {
+                env: this.nodes.env,
+                dbAlias: this.nodes.dbAlias,
+                tn
+              })
+              prop = `${_tn}List`
+              cn = col.lk
+                ? col.lk._lcn
+                : (this.$store.state.meta.metas[tn].columns.find(c => c.pv) ||
+                  this.$store.state.meta.metas[tn].columns.find(c => c.pk))._cn
+              row[col._cn] = r.row[prop] && r.row[prop].map(r => cn && r[cn])
+            } else if (col.bt || (col.lk && col.lk.type === 'bt')) {
+              const tn = col.bt ? col.bt.rtn : col.lk.ltn
+              const _tn = col.bt ? col.bt._rtn : col.lk._ltn
+              await this.$store.dispatch('meta/ActLoadMeta', {
+                env: this.nodes.env,
+                dbAlias: this.nodes.dbAlias,
+                tn
+              })
+              prop = `${_tn}Read`
+              cn = col.lk
+                ? col.lk._lcn
+                : (this.$store.state.meta.metas[tn].columns.find(c => c.pv) ||
+                  this.$store.state.meta.metas[tn].columns.find(c => c.pk) || {})._cn
+              row[col._cn] = r.row[prop] &&
+                r.row[prop] && cn && r.row[prop][cn]
+            } else {
+              row[col._cn] = r.row[col._cn]
+            }
+          } else if (col.uidt === 'Attachment') {
+            let data = []
+            try {
+              if (typeof r.row[col._cn] === 'string') {
+                data = JSON.parse(r.row[col._cn])
+              } else if (r.row[col._cn]) {
+                data = r.row[col._cn]
+              }
+            } catch {
+            }
+            row[col._cn] = (data || []).map(a => `${a.title}(${a.url})`)
+          } else {
+            row[col._cn] = r.row[col._cn]
+          }
+        }
+        return row
+      }))
+    },
+    async exportCsv() {
+      // const fields = this.availableColumns.map(c => c._cn)
+      // const blob = new Blob([Papaparse.unparse(await this.extractCsvData())], { type: 'text/plain;charset=utf-8' })
       let offset = 0
       let c = 1
-      const res = await this.$store.dispatch('sqlMgr/ActSqlOp', [
+      try {
+        while (!isNaN(offset) && offset > -1) {
+          const res = await this.$store.dispatch('sqlMgr/ActSqlOp', [
             this.publicViewId
               ? null
               : {
@@ -161,19 +230,76 @@ export default {
             null,
             true
           ])
-      console.log(res)
-      const data = res.data
-      console.log(data)    
-      const blob = new Blob([data], { type: 'application/pdf;charset-UTF-8'})
-      console.log(blob)
+          const data = res.data
+          offset = +res.headers['nc-export-offset']
+          const blob = new Blob([data], { type: 'text/plain;charset=utf-8' })
+          FileSaver.saveAs(blob, `${this.meta._tn}_exported_${c++}.csv`)
+          if (offset > -1) {
+            this.$toast.info('Downloading more files').goAway(3000)
+          } else {
+            this.$toast.success('Successfully exported all table data').goAway(3000)
+          }
+        }
+      } catch (e) {
+        this.$toast.error(e.message).goAway(3000)
+      }
+    },
+   
+   async downloadPdf() {
+      const doc = new jsPDF();
+      let offset = 0;
+      let c = 1;
+      const res = await this.$store.dispatch("sqlMgr/ActSqlOp", [
+        this.publicViewId
+          ? null
+          : {
+              dbAlias: this.nodes.dbAlias,
+              env: "_noco",
+            },
+        this.publicViewId ? "sharedViewExportAsCsv" : "xcExportAsCsv",
+        {
+          query: { offset },
+          localQuery: this.queryParams || {},
+          ...(this.publicViewId
+            ? {
+                view_id: this.publicViewId,
+              }
+            : {
+                view_name: this.selectedView.title,
+                model_name: this.meta.tn,
+              }),
+        },
+        null,
+        {
+          responseType: "json",
+        },
+        null,
+        true,
+      ]);
+      console.log(res);
+      const data = res.data;
+      console.log(data);
+      var dataList = data.split("\n");
+      var pdfHead = dataList[0].split(',');
+      var bodyDataList = dataList.slice(1);
+      var pdfBody = [];
+      for (var i = 0; i < bodyDataList.length; i++) {
+        pdfBody.push(bodyDataList[i].split(','));
+      }
+
       
-      const resData = JSON.parse(JSON.stringify(data))
-      console.log("Response Parse")
-      console.log(resData)
-      doc.text(blob)
-      doc.save("table.pdf")
+      doc.autoTable({
+        head: [pdfHead],
+        body: pdfBody
+      });
 
-
+    
+      doc.save(`${this.meta.tn}_exported${c++}.pdf`);
+       if (offset > -1) {
+            this.$toast.info('Downloading more files').goAway(3000)
+          } else {
+            this.$toast.success('Successfully exported all table data').goAway(3000)
+          }
     },
  
     async importData(columnMappings) {

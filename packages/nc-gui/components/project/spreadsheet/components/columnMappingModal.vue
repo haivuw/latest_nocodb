@@ -144,7 +144,7 @@ export default {
         const o = { sourceCn: col, enabled: true }
         const tableColumn = this.meta.columns.find(c => c._cn === col)
         if (tableColumn) {
-          o.destCn = tableColumn._cn
+          o.destCn = "id"
         }
         this.mappings.push(o)
       }
