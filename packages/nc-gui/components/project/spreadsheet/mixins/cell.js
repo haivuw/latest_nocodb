@@ -57,6 +57,12 @@ export default {
     },
     isAttachment() {
       return this.column.uidt === 'Attachment'
+    },
+
+    // Yahya Added for history one, but its not important
+    isHistory() {
+      console.log('this.column.uidt: ',this.column.uidt)
+      return this.column.uidt === 'History'
     }
 
   }

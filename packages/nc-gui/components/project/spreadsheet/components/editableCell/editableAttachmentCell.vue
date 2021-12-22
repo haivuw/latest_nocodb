@@ -44,19 +44,31 @@
                 />
               </template>
             </v-img>
+
+
+            <!-- // Yahya changed below componenet -->
             <v-icon
               v-else-if="item.icon"
               :size="active ? 33 : 22"
               v-on="on"
-              @click="openUrl(item.url || item.data,'_blank')"
+              @click="showPDFDialog = true;pdfURL=item.url/*openUrl(item.url || item.data,'_blank')*/"
             >
               {{
                 item.icon
               }}
             </v-icon>
-            <v-icon v-else :size="active ? 33 : 22" v-on="on" @click="openUrl(item.url|| item.data,'_blank')">
+
+            <!-- // Yahya changed below componenet -->
+            <v-icon
+              v-else
+              :size="active ? 33 : 22"
+              v-on="on"
+              @click="showPDFDialog = true;pdfURL=item.url/*openUrl(item.url|| item.data,'_blank')*/"
+            >
               mdi-file
             </v-icon>
+
+
           </template>
           <span>{{ item.title }}</span>
         </v-tooltip>
@@ -90,6 +102,149 @@
       </v-icon>
       <input ref="file" type="file" multiple class="d-none" @change="onFileSelection">
     </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- // Yahya added below lage component -->
+    <v-dialog
+      v-if="showPDFDialog"
+      v-model="showPDFDialog"
+      class="showPDF"
+      width="800"
+    >
+      <v-card class="images-modal">
+
+        <v-container fluid style="height:90vh" class="py-0">
+          <v-row class="h-100">
+            <v-col class="h-100 px-10" style="overflow-y: auto" cols="8">
+              <embed :src="pdfURL" style="width:100%;height:100%"/>
+            </v-col>
+            <v-col
+              cols="4"
+              class="d-flex flex-column h-100 flex-grow-1 blue-grey"
+              :class="{
+                'lighten-5':!$vuetify.theme.dark,
+                'darken-4':$vuetify.theme.dark
+              }"
+            >
+              <v-skeleton-loader v-if="loadingLogs && !logs" type="list-item-avatar-two-line@8" />
+
+              <v-list
+                v-else
+                ref="commentsList"
+                width="100%"
+                style="overflow-y: auto; overflow-x: auto"
+                class="blue-grey "
+                :class="{
+                  'lighten-5':!$vuetify.theme.dark,
+                  'darken-4':$vuetify.theme.dark
+                }"
+              >
+                <v-list-item v-for="log in logs" :key="log.id" class="d-flex">
+                  <v-list-item-icon class="ma-0 mr-2">
+                    <v-icon :color="isYou(log.user) ? 'pink lighten-2' : 'blue lighten-2'">
+                      mdi-account-circle
+                    </v-icon>
+                  </v-list-item-icon>
+                  <div class="flex-grow-1" style="min-width: 0">
+                    <p class="mb-1 caption edited-text">
+                      {{ isYou(log.user) ? 'You' : log.user==null?'Shared base':log.user }} {{
+                        log.op_type === 'COMMENT' ? 'commented' : (
+                          log.op_sub_type === 'INSERT' ? 'created' : 'edited'
+                        )
+                      }}
+                    </p>
+                    <p v-if="log.op_type === 'COMMENT'" class="caption mb-0 nc-chip" :style="{background: '#ccc'}">
+                      {{ log.description }}
+                    </p>
+
+                    <p v-else class="caption mb-0" style="word-break: break-all;" v-html="log.details" />
+
+                    <p class="time text-right mb-0">
+                      {{ calculateDiff(log.created_at) }}
+                    </p>
+                  </div>
+                </v-list-item>
+              </v-list>
+
+              <v-spacer />
+              <v-divider />
+              <div class="d-flex align-center justify-center">
+                <v-switch v-model="commentsOnly" class="mt-1" dense hide-details @change="getAuditsAndComments">
+                  <template #label>
+                    <span class="caption grey--text">Comments only</span>
+                  </template>
+                </v-switch>
+              </div>
+              <div class="flex-shrink-1 mt-2 d-flex pl-4">
+                <v-icon color="pink lighten-2" class="mr-2">
+                  mdi-account-circle
+                </v-icon>
+                <v-text-field
+                  v-model="comment"
+                  dense
+                  placeholder="Comment"
+                  flat
+                  solo
+                  hide-details
+                  class="caption comment-box"
+                  :class="{ focus : showborder }"
+                  @focusin=" showborder = true"
+                  @focusout=" showborder = false"
+                  @keyup.enter.prevent="saveComment"
+                >
+                  <template v-if="comment" #append>
+                    <x-icon tooltip="Save" small @click="saveComment">
+                      mdi-keyboard-return
+                    </x-icon>
+                  </template>
+                </v-text-field>
+              </div>
+            </v-col>
+          </v-row>
+        </v-container>
+
+      </v-card>
+    </v-dialog>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     <v-dialog
       v-if="dialog"
@@ -146,14 +301,26 @@
                         @click="selectImage(item.url,i)"
                       >
 
-                      <v-icon v-else-if="item.icon" size="33" @click="openUrl(item.url || item.data,'_blank')">
+                      <!-- // Yahya changed below componenet -->
+                      <v-icon
+                        v-else-if="item.icon"
+                        size="33"
+                        @click="showPDFDialog = true;pdfURL=item.url/*openUrl(item.url || item.data,'_blank')*/"
+                      >
                         {{
                           item.icon
                         }}
                       </v-icon>
-                      <v-icon v-else size="33" @click="openUrl(item.url || item.data,'_blank')">
+
+                      <!-- // Yahya changed below componenet -->
+                      <v-icon
+                        v-else size="33"
+                        @click="showPDFDialog = true;pdfURL=item.url/*openUrl(item.url || item.data,'_blank')*/"
+                      >
                         mdi-file
                       </v-icon>
+
+
                     </div>
                   </v-card>
                   <p class="caption mt-2 modal-title" :title="item.title">
@@ -253,6 +420,12 @@
 import FileSaver from 'file-saver'
 import draggable from 'vuedraggable'
 import { isImage } from '@/components/project/spreadsheet/helpers/imageExt'
+import dayjs from 'dayjs'                                  // Yahya added
+
+const relativeTime = require('dayjs/plugin/relativeTime')  // Yahya added
+const utc = require('dayjs/plugin/utc')                    // Yahya added
+dayjs.extend(utc)                                          // Yahya added
+dayjs.extend(relativeTime)                                 // Yahya added
 
 export default {
   name: 'EditableAttachmentCell',
@@ -263,10 +436,17 @@ export default {
     uploading: false,
     localState: '',
     dialog: false,
+    showPDFDialog: false, // Yahya added
+    pdfURL: '',           // Yahya added
+    loadingLogs: true,    // Yahya added
+    logs: null,           // Yahya added
     showImage: false,
+    showborder: false,    // Yahya added
     selectedImage: null,
     dragOver: false,
-    localFilesState: []
+    localFilesState: [], // Yahya added
+    commentsOnly: false, // Yahya added
+    comment: null,       // Yahya added
   }),
   watch: {
     value(val, prev) {
@@ -288,7 +468,13 @@ export default {
     } catch (e) {
       this.localState = []
     }
-    document.addEventListener('keydown', this.onArrowDown)
+    this.getAuditsAndComments()                                 // Yahya added
+    document.addEventListener('keydown', this.onArrowDown)     // Yahya added
+
+    // this.localState = { ...this.value }                      //Yahya added
+    // if (!this.isNew && this.toggleDrawer) {                  //Yahya added
+    //   this.getAuditsAndComments()                            //Yahya added
+    // }                                                        // Yahya added
   },
   beforeDestroy() {
     document.removeEventListener('keydown', this.onArrowDown)
@@ -296,6 +482,52 @@ export default {
   mounted() {
   },
   methods: {
+
+    // Yahya added below function
+    async saveComment() {
+      try {
+        await this.$store.dispatch('sqlMgr/ActSqlOp', [
+          { dbAlias: this.dbAlias },
+          'xcAuditCommentInsert', {
+            model_id: this.meta.columns.filter(c => c.pk).map(c => this.localState[c._cn]).join('___'),
+            model_name: this.meta._tn,
+            description: this.comment
+          }
+        ])
+        this.comment = ''
+        this.$toast.success('Comment added successfully').goAway(3000)
+        this.$emit('commented')
+        await this.getAuditsAndComments()
+      } catch (e) {
+        this.$toast.error(e.message).goAway(3000)
+      }
+    },
+
+    // Yahya added below function
+    async getAuditsAndComments() {
+      this.loadingLogs = true
+      const data = await this.$store.dispatch('sqlMgr/ActSqlOp', [{ dbAlias: this.dbAlias }, 'xcModelRowAuditAndCommentList', {
+        model_id: this.meta.columns.filter(c => c.pk).map(c => this.localState[c._cn]).join('___'),
+        model_name: this.meta._tn,
+        comments: this.commentsOnly
+      }])
+      this.logs = data.list
+      console.log("logs")
+      console.log(this.logs)
+      this.loadingLogs = false
+    },
+
+    // Yahya added below function
+    calculateDiff(date) {
+      return dayjs.utc(date).fromNow()
+    },
+
+    // Yahya added below function
+    isYou(email) {
+      return this.$store.state.users.user && this.$store.state.users.user.email === email
+    },
+
+
     openUrl(url, target) {
       window.open(url, target)
     },
@@ -401,6 +633,19 @@ export default {
 </script>
 
 <style scoped lang="scss">
+
+// Yahya added below style
+.nc-chip{
+  padding:8px;
+  border-radius: 8px;
+}
+
+// Yahya added below style
+.time, .edited-text {
+  font-size: .65rem;
+  color: grey;
+}
+
 .img-container {
   margin: 0 -2px;
 }

@@ -104,6 +104,14 @@
       v-on="parentListeners"
     />
 
+    <!-- // Yahya Added for history one, but its not important -->
+    <history-cell
+      v-else-if="isHistory"
+      v-model="localState"
+      :column="column"
+      v-on="parentListeners"
+    ></history-cell>
+
     <text-cell v-else v-model="localState" v-on="$listeners" />
     <span v-if="hint" class="nc-hint">{{ hint }}</span>
 
@@ -130,6 +138,9 @@ import EnumCell from '@/components/project/spreadsheet/components/cell/enumCell'
 import SetListEditableCell from '@/components/project/spreadsheet/components/editableCell/setListEditableCell'
 import SetListCell from '@/components/project/spreadsheet/components/cell/setListCell'
 
+// Yahya Added for history one, but its not important
+import HistoryCell from '@/components/project/spreadsheet/components/editableCell/historyCell'
+
 export default {
   name: 'EditableCell',
   components: {
@@ -147,7 +158,8 @@ export default {
     TextAreaCell,
     DateTimePickerCell,
     TextCell,
-    DatePickerCell
+    DatePickerCell,
+    HistoryCell, // Yahya Added for history one, but its not important
   },
   mixins: [cell],
   props: {
