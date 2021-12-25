@@ -455,6 +455,9 @@ export default {
       } catch (e) {
         this.localState = []
       }
+    },
+    pdfURL() {
+      this.getAuditsAndComments()
     }
     // localState(val) {
     //   if (this.isForm) {
@@ -489,7 +492,7 @@ export default {
         await this.$store.dispatch('sqlMgr/ActSqlOp', [
           { dbAlias: this.dbAlias },
           'xcAuditCommentInsert', {
-            model_id: this.meta.columns.filter(c => c.pk).map(c => this.localState[c._cn]).join('___'),
+            model_id: this.pdfURL,
             model_name: this.meta._tn,
             description: this.comment
           }
@@ -507,7 +510,7 @@ export default {
     async getAuditsAndComments() {
       this.loadingLogs = true
       const data = await this.$store.dispatch('sqlMgr/ActSqlOp', [{ dbAlias: this.dbAlias }, 'xcModelRowAuditAndCommentList', {
-        model_id: this.meta.columns.filter(c => c.pk).map(c => this.localState[c._cn]).join('___'),
+        model_id: this.pdfURL,
         model_name: this.meta._tn,
         comments: this.commentsOnly
       }])
